@@ -1,0 +1,60 @@
+box: golang
+
+build: 
+  steps: 
+    - 
+      setup-go-workspace: 
+        package-dir: github.com/bobwongvouse/gogo
+    - 
+      script:
+        code: env
+        name: env
+    - 
+      script: 
+        code: |
+            cd $WERCKER_SOURCE_DIR
+            go version
+            go get -u github.com/Masterminds/glide
+        export PATH=$WERCKER_SOURCE_DIR/bin:$PATH
+        glide install
+        name: "go get"
+    - 
+      script: 
+        code: "go build\n"
+        name: "go build"
+    - 
+      script: 
+        code: "cp -R ./ ${WERCKER_OUTPUT_DIR}\n"
+        name: "copy files to wercker output"
+deploy: 
+  steps: 
+    - 
+      internal/docker-push:
+        password: $DOCKER_PASSWORD
+        cmd: /pipeline/source/gogo
+        port: "8080"
+        registry: "https://registry.hub.docker.com"
+        repository: tspeech/gogo
+        tag: latest
+        username: $DOCKER_USERNAME
+
+dev: 
+  steps: 
+    - 
+      setup-go-workspace: 
+        package-dir: bobwongvouse/gogo
+    - 
+      script: 
+        code: env
+        name: env
+    - 
+      script: 
+        code: |
+            cd $WERCKER_SOURCE_DIR
+            go version
+        name: "go get"
+    - 
+      internal/watch: 
+        code: "go run main.go"
+        reload: true
+
